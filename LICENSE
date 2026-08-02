@@ -1,42 +1,21 @@
-const express = require("express");
-const db = require("../db");
-const { generateId } = require("../utils/id");
-const { requireAuth } = require("../middleware/auth");
+MIT License
 
-const router = express.Router();
-router.use(requireAuth);
+Copyright (c) 2026 Expense Tracker Dashboard contributors
 
-// GET /api/budgets?month=YYYY-MM
-router.get("/", (req, res) => {
-  const month = req.query.month;
-  if (!month || !/^\d{4}-\d{2}$/.test(month)) {
-    return res.status(400).json({ error: "month query param is required, format YYYY-MM" });
-  }
-  const budgets = db.get("budgets").filter({ userId: req.userId, month }).value();
-  res.json(budgets);
-});
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-// PUT /api/budgets  { categoryId, month, amount }  — upsert
-router.put("/", (req, res) => {
-  const { categoryId, month, amount } = req.body || {};
-  if (typeof categoryId !== "string" || !categoryId) return res.status(400).json({ error: "categoryId is required" });
-  if (typeof month !== "string" || !/^\d{4}-\d{2}$/.test(month)) {
-    return res.status(400).json({ error: "month is required, format YYYY-MM" });
-  }
-  if (typeof amount !== "number" || amount < 0) return res.status(400).json({ error: "amount must be a non-negative number" });
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-  const category = db.get("categories").find({ id: categoryId, userId: req.userId }).value();
-  if (!category) return res.status(400).json({ error: "unknown categoryId" });
-
-  const existing = db.get("budgets").find({ userId: req.userId, categoryId, month }).value();
-  if (existing) {
-    db.get("budgets").find({ userId: req.userId, categoryId, month }).assign({ amount }).write();
-    return res.json({ ...existing, amount });
-  }
-
-  const budget = { id: generateId(), userId: req.userId, categoryId, month, amount };
-  db.get("budgets").push(budget).write();
-  res.status(201).json(budget);
-});
-
-module.exports = router;
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
